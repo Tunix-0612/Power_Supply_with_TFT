@@ -1,0 +1,15 @@
+.pio/
+.vscode/
+firmware/.pio/
+firmware/.vscode/
+*.code-workspace
+
+# Altium
+
+*.LOG
+*.PcbDoc.htm
+hardware/*
+!hardware/output/
+
+Reports/
+Road Maps/
