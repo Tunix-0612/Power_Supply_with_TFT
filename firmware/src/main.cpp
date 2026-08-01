@@ -1,14 +1,11 @@
 /*
-    BYTunix - Tunahan Bayraktar
+    Tunix - Tunahan Bayraktar
     Mosfet Power Supply
     Revived at 25/03/2026 - x
     Arduino Nano
-    Version 1.0.0 Full Release - Build.26.06.A
-    Update Name --- Full Release --- Major Update
+    Version 0.6.0 Alpha - Build.26.08.A
 
     (128 - text width) / 2 -- Small Text Size: 5+1 -- Med. Txt. Size: 10+2
-
-    
 
     ---------------------------------------------------------
     CHANGELOG

@@ -62,8 +62,8 @@ void infoMenu()
       case 5: textToScreenFast(3, textPos, "NaN/30720", false); break;
       case 6: textToScreenFast(3, textPos, "NaN/2048", false); break;
       case 7: textToScreenFast(3, textPos, "Tunix PS.UI", false); break;
-      case 8: textToScreenFast(3, textPos, "V1.0.0", false); break;
-      case 9: textToScreenFast(3, textPos, "26.06.A", false); break;
+      case 8: textToScreenFast(3, textPos, "V0.6.0", false); break;
+      case 9: textToScreenFast(3, textPos, "26.08.A", false); break;
       case 10: textToScreenFast(3, textPos, "0-24V", false); break;
       case 11: textToScreenFast(3, textPos, "128x128 SPI", false); break;
     }
