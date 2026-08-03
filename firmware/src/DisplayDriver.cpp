@@ -1,24 +1,23 @@
-#include "display.h"
-#include "constants.h"
-#include "variables.h"
+#include "DisplayDriver.h"
+#include "Constants.h"
+#include "TunixMemoryManager.h"
 
+DisplayDriver::DisplayDriver() : tft(pins::TFT_CS, pins::TFT_DC, -1) {}
 
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, -1);
-
-static float oldVolt, oldCurrent, watt, oldWatt;
-
-static bool lastLimitState = false;
-
-void initDisplay()
+void DisplayDriver::initDisplay()
 {
   tft.initR(INITR_144GREENTAB);
   tft.setSPISpeed(8000000);
   tft.fillScreen(ST77XX_BLACK);
   tft.setRotation(0);
-  digitalWrite(screenBacklightPin, HIGH);
+  digitalWrite(pins::SCREEN_BACKLIGHT, HIGH);
 }
 
-void textToScreenFull(int x, int y, uint16_t textColor, uint16_t backgroundColor, int size, const char *text, bool textWrap)
+//-----------------------------------
+//  PRIMITIVE FUNCTIONS
+//-----------------------------------
+
+void DisplayDriver::textToScreenFull(int x, int y, uint16_t textColor, uint16_t backgroundColor, int size, const char *text, bool textWrap)
 {
   tft.setCursor(x, y);
   tft.setTextColor(textColor, backgroundColor);
@@ -27,15 +26,39 @@ void textToScreenFull(int x, int y, uint16_t textColor, uint16_t backgroundColor
   tft.print(text);
 }
 
-void textToScreenFast(int x, int y, const char *text, bool ignorePos)
+void DisplayDriver::textToScreenFast(int x, int y, const char *text, bool ignorePos)
 {
   if(!ignorePos) tft.setCursor(x, y);
   tft.print(text);
 }
 
-void lineToScreen(int startX, int startY, int endX, int endY, uint16_t color) { tft.drawLine(startX, startY, endX, endY, color); }
+void DisplayDriver::lineToScreen(int startX, int startY, int endX, int endY, uint16_t color) { tft.drawLine(startX, startY, endX, endY, color); }
 
-void menuGridLines()
+void DisplayDriver::clearScreen(uint16_t color = ST7735_BLACK) { tft.fillScreen(color); }
+
+void DisplayDriver::drawBox(int x, int y, int w, int h, uint16_t color, bool filled)
+{
+  if(filled) tft.fillRect(x, y, w, h, color);
+  else       tft.drawRect(x, y, w, h, color);
+}
+
+void DisplayDriver::drawCircleShape(int x, int y, int r, uint16_t color, bool filled)
+{
+  if(filled) tft.fillCircle(x, y, r, color);
+  else       tft.drawCircle(x, y, r, color);
+}
+
+void DisplayDriver::drawTriangleShape(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color, bool filled)
+{
+  if(filled) tft.fillTriangle(x1, y1, x2, y2, x3, y3, color);
+  else       tft.drawTriangle(x1, y1, x2, y2, x3, y3, color);
+}
+
+//-----------------------------------
+//  GUI FUNCTIONS
+//-----------------------------------
+
+void DisplayDriver::menuGridLines()
 {
   lineToScreen(12, 34, 116, 34, TFT_GRAY);
   lineToScreen(12, 51, 116, 51, TFT_GRAY);
@@ -44,22 +67,22 @@ void menuGridLines()
   lineToScreen(12, 102, 116, 102, TFT_GRAY);
 }
 
-void settingsMenuTextData()
+void DisplayDriver::settingsMenuTextData()
 {
   char currentLimitStr[10];
-  dtostrf(settings.currentLimit, 5, 2, currentLimitStr);
-  if(settings.currentLimit >= 10) textToScreenFull(94, 40, ST7735_WHITE, ST7735_BLACK, 1, currentLimitStr, false);
+  dtostrf(memory.settings.currentLimit, 5, 2, currentLimitStr);
+  if(memory.settings.currentLimit >= 10) textToScreenFull(94, 40, ST7735_WHITE, ST7735_BLACK, 1, currentLimitStr, false);
   else textToScreenFull(100, 40, ST7735_WHITE, ST7735_BLACK, 1, currentLimitStr, false);
 
-  if(settings.currentProtectionMode == true) textToScreenFast(112, 57, "CC", false);
-  if(settings.currentProtectionMode == false) textToScreenFast(112, 57, "CP", false);
+  if(memory.settings.currentProtectionMode == true) textToScreenFast(112, 57, "CC", false);
+  if(memory.settings.currentProtectionMode == false) textToScreenFast(112, 57, "CP", false);
   tft.setCursor(94, 74);
 
-  if(settings.batteryMode == true) textToScreenFast(94, 74, "Active", false); 
-  if(settings.batteryMode == false) textToScreenFast(92, 74, "Passive", false);
+  if(memory.settings.batteryMode == true) textToScreenFast(94, 74, "Active", false); 
+  if(memory.settings.batteryMode == false) textToScreenFast(92, 74, "Passive", false);
 }
 
-void settingsMenuText()
+void DisplayDriver::settingsMenuText()
 {
   textToScreenFull(5, 23, ST7735_WHITE, ST7735_BLACK, 1, "Volt Tolerance", false);
   textToScreenFast(5, 40, "Current Limitation", false);
@@ -69,7 +92,7 @@ void settingsMenuText()
 }
 
 
-void powerSupplyModeLines()
+void DisplayDriver::powerSupplyModeLines()
 {
   tft.fillScreen(ST7735_BLACK);
   lineToScreen(0, 27, 82, 27, TFT_GRAY);
@@ -85,7 +108,7 @@ void powerSupplyModeLines()
   tft.fillCircle(64, 117, 7, TFT_GRAY);
 }
 
-void tunixBadge()
+void DisplayDriver::tunixBadge()
 {
   textToScreenFull(22, 3, TFT_GRAY, ST7735_BLACK, 1, "T", false);
   textToScreenFast(42, 3, "U", false);
@@ -95,7 +118,7 @@ void tunixBadge()
   lineToScreen(0, 14, 128, 14, TFT_GRAY);
 }
 
-void mainMenuText()
+void DisplayDriver::mainMenuText()
 {
   textToScreenFull(34, 23, ST7735_WHITE, ST7735_BLACK, 1 , "Basic Mode", false);
   textToScreenFast(25, 40, "Advanced Mode", false);
@@ -103,7 +126,7 @@ void mainMenuText()
   textToScreenFast(31, 74, "Information", false);
 }
 
-void basicModScreenManager(float volt, float current)
+void DisplayDriver::basicModScreenManager(float volt, float current)
 {
   /*barValue = map(potValue, 0, 1024, 0, 128);
   tft.fillRect(0, 102, 128, 3, tft.color565(153, 255, 255));
@@ -139,27 +162,27 @@ void basicModScreenManager(float volt, float current)
   if(relayPosition == 0) tft.fillCircle(64, 117, 7, TFT_GRAY);*/
 }
 
-void advancedModScreenManager(float volt, float current)
+void DisplayDriver::advancedModScreenManager(float volt, float current)
 {
   if (firstScreenWrite == true)
   {
-    barValue = map(settings.questVolt, 0, MAX_VOLTAGE, 0, 128);
+    barValue = map(memory.settings.questVolt, 0, characteristics::MAX_VOLTAGE, 0, 128);
     char questVoltStr[10];
-    if (settings.questVolt >= 10)
+    if (memory.settings.questVolt >= 10)
     {
-      dtostrf(settings.questVolt, 5, 2, questVoltStr);
+      dtostrf(memory.settings.questVolt, 5, 2, questVoltStr);
       textToScreenFull(4, 6, ST7735_WHITE, ST7735_BLACK, 2, questVoltStr, false);
-      tft.print(settings.questVolt, 2);
+      tft.print(memory.settings.questVolt, 2);
     }
     else
     {
-      dtostrf(settings.questVolt, 5, 3, questVoltStr);
+      dtostrf(memory.settings.questVolt, 5, 3, questVoltStr);
       textToScreenFull(4, 6, ST7735_WHITE, ST7735_BLACK, 2, questVoltStr, false);
     }
   textToScreenFast(1, 1, "V", true);
   }
   //VOLT
-  if ((volt != oldVolt) || (firstScreenWrite == true)) 
+  if ((volt != oldVolt) || (firstScreenWrite == true))
   {
     oldVolt = volt;
     char voltStr[10];
@@ -174,7 +197,7 @@ void advancedModScreenManager(float volt, float current)
     else textToScreenFast(4, 33, voltStr, false);
   }
   //OVER CURRENT
-  bool currentLimitExceeded = (currentCalculated > settings.currentLimit);
+  bool currentLimitExceeded = (currentCalculated > memory.settings.currentLimit);
   if (currentLimitExceeded != lastLimitState || firstScreenWrite == true)
   {
     lastLimitState = currentLimitExceeded;
