@@ -15,7 +15,9 @@
 
     [Changed]
     - All functions has been re-structured and re-written to be more efficient and readable.
-    - Complete overhaul towards C++11 standards and practices.
+    - Complete overhaul towards C++ standards and practices.
+    - Global variables has been removed and replaced with class objects.
+    - File names has been re-structured.
 
     [Removed]
     - Unrequired definitions has been removed.
@@ -25,8 +27,6 @@
 
     [Fixed]
     - 
-
-
 */
 
 #include "Constants.h"
