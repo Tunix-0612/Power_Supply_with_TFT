@@ -2,7 +2,7 @@
     Tunix - Tunahan Bayraktar
     Mosfet Power Supply with TL494
     Arduino Nano
-    Version 0.7.2 Alpha - Build.26.08.D
+    Version 0.7.3 Alpha - Build.26.08.E
 
     (128 - text width) / 2 -- Small Text Size: 5+1 -- Med. Txt. Size: 10+2
 
@@ -10,18 +10,16 @@
     CHANGELOG
     ---------------------------------------------------------
     [Added]
-    - Minor module updates.
+    - Agression based temperature/fan driving methodes has been added.
 
     [Changed]
-    - Minor optimization to menu grid line render.
-    - Color codes has been moved to Display Driver.
-    - Complete over-haul to the Settings Menu and Menu UI.
+    - Improved the temperature sensor faulty check.
     
     [Removed]
-    - Info Menu has been removed temporarily.
+    - Self test has been partialy disabled temporarily.
 
     [Fixed]
-    - 
+    - Multiple definition mistakes has been fixed.
 
     [Notice]
       New UI features are experimental as they are not expected to work properly yet or work at all.

@@ -1,7 +1,7 @@
 #include "Menu.h"
+
 #include "DisplayDriver.h"
 #include "Constants.h"
-#include "DisplayDriver.h"
 #include "TempController.h"
 #include "PowerSupplyModes.h"
 #include "TunixMemoryManager.h"

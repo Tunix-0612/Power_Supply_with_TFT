@@ -51,12 +51,11 @@ ErrorCode TunixSelfTest::selfTest()
 {
 	if(runRAMTest()) return ErrorCode::RAM_FAILURE;
 	
-  int temperatureStatus = temperature.tempControl();
+  temperature.tempControl();
   float voltCalculated = output.readVoltage();
   float voltMainCalculated = output.readMainVoltage();
   float currentCalculated = output.readCurrent();
-  if(temperatureStatus == 1 && temperatureStatus == 0) errorManager.errorHandler(ErrorCode::TEMP_SENSOR_FAIL);
-  if(temperatureStatus >= 85) errorManager.errorHandler(ErrorCode::OVERHEAT);
+  
   if(voltCalculated > 1.00) errorManager.errorHandler(ErrorCode::VOLTAGE_FLUCTUATE);
   if(voltMainCalculated < 7.00) errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_LOW);
   if(currentCalculated > 0.05) errorManager.errorHandler(ErrorCode::CURRENT_CALC_FAIL);

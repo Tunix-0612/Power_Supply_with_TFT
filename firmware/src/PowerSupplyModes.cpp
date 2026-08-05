@@ -4,7 +4,6 @@
 #include "DisplayDriver.h"
 #include "TunixMemoryManager.h"
 #include "TempController.h"
-#include "DisplayDriver.h"
 #include "OutputManager.h"
 #include "InputManager.h"
 
