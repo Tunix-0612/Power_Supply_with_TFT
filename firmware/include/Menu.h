@@ -6,6 +6,12 @@
 class MenuClass
 {
   private:
+    void tunixBadge();
+    void menuGridLines();
+    void settingsMenuTextData();
+    void settingsMenuText();
+    void mainMenuText();
+
     byte menuCursor, sleepTime;
     int returnTime;
 

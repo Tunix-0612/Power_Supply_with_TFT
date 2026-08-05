@@ -64,14 +64,14 @@ float OutputManager::readCurrent()
 void OutputManager::relayChange()
 {
   tone(pins::BUZZER, 1800, 50);
-  while (digitalRead(pins::TOP_BUTTON) == LOW);
+  while (digitalRead(pins::UP_BUTTON) == LOW);
   delay(100);
   relayPosition = !relayPosition;
   digitalWrite(pins::RELAY, relayPosition);
   firstScreenWrite = 1;
   display.drawBox(85, 29, 40, 14, ST7735_BLACK);
-  if(relayPosition == true)   display.textToScreenFull(95, 29, ST7735_WHITE, ST7735_BLACK, 2, "On", false);
-  if(relayPosition == false)  display.textToScreenFull(89, 29, ST7735_WHITE, ST7735_BLACK, 2, "Off", false);
+  if(relayPosition == true)   display.textToScreenFull(95, 29, ST7735_WHITE, ST7735_BLACK, 2, F("On"), false);
+  if(relayPosition == false)  display.textToScreenFull(89, 29, ST7735_WHITE, ST7735_BLACK, 2, F("Off"), false);
 
   return;
 }
@@ -83,7 +83,7 @@ void OutputManager::relayOff()
   firstScreenWrite = 1;
   tone(pins::BUZZER, 800, 300);
   display.drawBox(85, 29, 40, 14, ST7735_BLACK);
-  display.textToScreenFull(89, 29, ST7735_RED, ST7735_BLACK, 2, "Off", false);
+  display.textToScreenFull(89, 29, ST7735_RED, ST7735_BLACK, 2, F("Off"), false);
   return;
 }
 

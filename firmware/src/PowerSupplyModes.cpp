@@ -6,6 +6,7 @@
 #include "TempController.h"
 #include "DisplayDriver.h"
 #include "OutputManager.h"
+#include "InputManager.h"
 
 byte questVoltChangeCursor;
 
@@ -21,7 +22,7 @@ int PowerSupplyClass::standbyMode()
     delay(5);
   }
   display.clearScreen();
-  while(digitalRead(pins::TOP_BUTTON) == HIGH)
+  while(digitalRead(pins::UP_BUTTON) == HIGH)
   {
     delay(2000);
     temperature.tempControl();
@@ -35,11 +36,11 @@ int PowerSupplyClass::standbyMode()
 
 void PowerSupplyClass::basicMod()
 {
-  digitalWrite(pins::RELAY, LOW);
+  /*digitalWrite(pins::RELAY, LOW);
   display.relayPosition = 0;
   previousTime = currentTime;
   secondaryPreviousTime = currentTime;
-  /*basicModLines();
+  basicModLines();
   while(digitalRead(topButtonPin) == HIGH);
   while(digitalRead(leftButtonPin) == LOW)
   {
@@ -63,18 +64,18 @@ void PowerSupplyClass::basicMod()
       basicModScreenManager(voltCalculated, currentCalculated);
       tempControl();
     }
-  }*/
+  }
   digitalWrite(pins::RELAY, LOW);
   display.relayPosition = false;
   while(digitalRead(pins::LEFT_BUTTON) == LOW);
   tone(pins::BUZZER, 1800, 50);
-  return;
+  return;*/
 }
 
 void PowerSupplyClass::questVoltChangeScreenLines(char *questVoltStr)
 {
   display.textToScreenFull(31, 60, ST7735_WHITE, ST7735_BLACK, 2, questVoltStr, false);
-  display.textToScreenFast(1, 1, "V", true);
+  display.textToScreenFast(1, 1, F("V"), true);
   if(questVoltChangeCursor == 1)
   {
     if(memory.settings.questVolt >= 10)  display.lineToScreen(43, 75, 52, 75, TFT_GRAY);
@@ -95,7 +96,7 @@ void PowerSupplyClass::questVoltChangeScreenLines(char *questVoltStr)
 void PowerSupplyClass::questVoltChange()
 {
   display.clearScreen();
-  display.textToScreenFull(20, 5, ST7735_WHITE, ST7735_BLACK, 2, "Quest V", false);
+  display.textToScreenFull(20, 5, ST7735_WHITE, ST7735_BLACK, 2, F("Quest V"), false);
   display.lineToScreen(0, 25, 128, 25, TFT_GRAY);
   questVoltChangeCursor = 1;
   delay(100);
@@ -104,10 +105,10 @@ void PowerSupplyClass::questVoltChange()
   questVoltChangeScreenLines(questVoltStr);
   while(questVoltChangeCursor <= 3)
   {
-    if(digitalRead(pins::TOP_BUTTON) == LOW) 
+    if(digitalRead(pins::UP_BUTTON) == LOW) 
     {
       tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::TOP_BUTTON) == LOW);
+      while(digitalRead(pins::UP_BUTTON) == LOW);
       questVoltChangeCursor++;
       questVoltChangeScreenLines(questVoltStr);
     }
@@ -136,58 +137,117 @@ void PowerSupplyClass::questVoltChange()
   }
   questVoltChangeCursor = 1;
   EEPROM.put(SETTINGS_ADRESS, memory.settings);
-  display.firstScreenWrite = 1;
   tone(pins::BUZZER, 1800, 50);
   return;
+}
+
+void PowerSupplyClass::setupAdvancedLayout() 
+{
+    display.clearScreen(ST7735_BLACK);
+    display.getRawDisplay().drawFastHLine(72, 22, 56, TFT_GRAY);
+    display.getRawDisplay().drawFastHLine(72, 44, 56, TFT_GRAY);
+    display.getRawDisplay().drawFastHLine(0,  66, 128, TFT_GRAY);
+}
+
+void PowerSupplyClass::advancedModRenderer(float volt, float current, bool relayActive)
+{
+    // --- LEFT SLOTS ---
+
+    // Voltage Render.
+    uint8_t voltPrec = (volt >= 10.0f) ? 2 : 3;
+    display.drawSlotFloat(SLOT_VOLTAGE, volt, 5, voltPrec, "V", ST7735_WHITE);
+
+    // Current Render.
+    uint8_t currPrec = (current >= 10.0f) ? 2 : 3;
+    display.drawSlotFloat(SLOT_CURRENT, current, 5, currPrec, "A", ST7735_YELLOW);
+
+    // Watt Render.
+    float watt = volt * current;
+    uint8_t wattPrec = (watt >= 100.0f) ? 1 : ((watt >= 10.0f) ? 2 : 3);
+    display.drawSlotFloat(SLOT_POWER, watt, 5, wattPrec, "W", ST7735_CYAN);
+
+
+    // --- RIGHT SLOTS ---
+
+    // Set Volt Render.
+    uint8_t setVoltPrec = (memory.settings.questVolt >= 10.0f) ? 1 : 2;
+    display.drawSlotFloat(SLOT_SET_VOLTAGE, memory.settings.questVolt, 4, setVoltPrec, "V", ST7735_GREEN);
+
+    // Operation Mode Render.
+    if (current > memory.settings.currentLimit) display.drawSlotText(SLOT_STATUS_A, F("MODE: OCP"), ST7735_RED);
+    else 
+    {
+        if (memory.settings.currentProtectionMode == 1) display.drawSlotText(SLOT_STATUS_A, F("MODE: CC "), ST7735_GREEN);
+        else                                            display.drawSlotText(SLOT_STATUS_A, F("MODE: CV "), ST7735_GREEN);
+    }
+
+    // Output Status Render.
+    if (relayActive)  display.drawSlotText(SLOT_STATUS_B, F("OUT: ON "), ST7735_GREEN);
+    else              display.drawSlotText(SLOT_STATUS_B, F("OUT: OFF"), TFT_GRAY);
 }
 
 void PowerSupplyClass::advancedMod()
 {
   digitalWrite(pins::RELAY, LOW);
-  display.relayPosition = 0;
-  display.firstScreenWrite = 1;
-  /*display.setCursor(87, 90);
-  display.setTextSize(1);
-  if(memory.settings.currentProtectionMode == 1)
-  {
-    display.print("CC");
-  }
-  if(memory.settings.currentProtectionMode == 0)
-  {
-    display.print("CP");
-  }*/
-  display.lineToScreen(82, 27, 128, 27, TFT_GRAY);
-  display.lineToScreen(82, 44, 128, 44, TFT_GRAY);
-  while(digitalRead(pins::TOP_BUTTON) == LOW);
-  display.powerSupplyModeLines();
-  previousTime = currentTime;
-  secondaryPreviousTime = currentTime;
+  bool outputActive = false;
+  
+  unsigned long previousTime = 0;
+  unsigned long secondaryPreviousTime = 0;
+  unsigned long currentTime = 0;
+
+  setupAdvancedLayout();
+
+  previousTime = millis();
+  secondaryPreviousTime = millis();
+
   while(digitalRead(pins::LEFT_BUTTON) == HIGH)
   {
     currentTime = millis();
-    display.voltCalculated = output.readVoltage();
-    display.voltMainCalculated = output.readMainVoltage();
-    display.currentCalculated = output.readCurrent();
-    if(digitalRead(pins::RIGHT_BUTTON) == LOW)
+
+    float voltCalculated = output.readVoltage();
+    float voltMainCalculated = output.readMainVoltage();
+    float currentCalculated = output.readCurrent();
+
+    inputManager.update();
+
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+    ButtonEvent eventRight = inputManager.getEvent(BTN_RIGHT);
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    
+    if(eventRight == BTN_EVENT_CLICK)
     {
       tone(pins::BUZZER, 1500, 20);
       digitalWrite(pins::RELAY, LOW);
-      display.relayPosition = pins::RELAY;
+      outputActive = false;
+
       questVoltChange();
-      display.powerSupplyModeLines();
+
+      setupAdvancedLayout();
     }
-    if(digitalRead(pins::TOP_BUTTON) == LOW)
+    if(eventUp == BTN_EVENT_CLICK)
     {
-      display.relayPosition = pins::RELAY;
-      output.setVoltage(memory.settings.questVolt);
+      tone(pins::BUZZER, 2000, 30);
+      outputActive = !outputActive;
+
+      if(outputActive) 
+      {
+        digitalWrite(pins::RELAY, HIGH);
+        output.setVoltage(memory.settings.questVolt);
+      } 
+      else 
+      {
+        digitalWrite(pins::RELAY, LOW);
+        output.setVoltage(0);
+      }
     }
     if(currentTime - previousTime >= refreshTime)
     {
       //Main Manager
       previousTime = currentTime;
-      display.advancedModScreenManager(display.voltCalculated, display.currentCalculated);
-      display.firstScreenWrite = 0;
+      advancedModRenderer(voltCalculated, currentCalculated, outputActive);
     }
+
     if(currentTime - secondaryPreviousTime >= secondaryRefreshTime)
     {
       //Secondary Manager
@@ -196,8 +256,8 @@ void PowerSupplyClass::advancedMod()
     }
   }
   digitalWrite(pins::RELAY, LOW);
-  display.relayPosition = false;
-  while(digitalRead(pins::LEFT_BUTTON) == LOW);
+  outputActive = false;
+  inputManager.update();
   display.clearScreen(ST7735_BLACK);
   tone(pins::BUZZER, 1800, 50);
   return;

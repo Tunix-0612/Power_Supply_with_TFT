@@ -32,10 +32,10 @@ void TunixMemoryManager::saveBasicMemory()
 void TunixMemoryManager::factoryReset()
 {
   display.clearScreen();
-  display.tunixBadge();
-  display.textToScreenFull(20, 10, ST7735_WHITE, ST7735_BLACK, 1, "Are you sure?", false);
-  display.textToScreenFast(5, 16, "All the settings will be reverted", false);
-  display.textToScreenFast(20, 22, "back to original", false);
+  // ADD LOGO
+  display.textToScreenFull(20, 10, ST7735_WHITE, ST7735_BLACK, 1, F("Are you sure?"), false);
+  display.textToScreenFast(5, 16, F("All the settings will be reverted"), false);
+  display.textToScreenFast(20, 22, F("back to original"), false);
   
   delay(200);
   while(digitalRead(pins::RIGHT_BUTTON) == HIGH);
@@ -47,9 +47,9 @@ void TunixMemoryManager::factoryReset()
   EEPROM.put(VERSION_ADRESS, eepromVersion);
 
   display.clearScreen();
-  display.tunixBadge();
-  display.textToScreenFast(5, 16, "Device Reset Complete", false);
-  display.textToScreenFast(5, 22, "Please restart the device", false);
+  // ADD LOGO
+  display.textToScreenFast(5, 16, F("Device Reset Complete"), false);
+  display.textToScreenFast(5, 22, F("Please restart the device"), false);
 
   delay(500);
   while(true);
@@ -68,17 +68,9 @@ ErrorCode TunixMemoryManager::firmwareValidate()
     if (eepromVersion < system_version::MIN_SUPPORTED) return ErrorCode::VERSION_NOT_SUPPORTED;
 
     display.clearScreen();
-    display.tunixBadge();
-    display.textToScreenFull(1, 20, ST7735_WHITE, ST7735_BLACK, 1, ">Version inconstancy detected", true);
-    display.textToScreenFast(1, 1, "\n>Update processing...", true);
-
-
-    EEPROM.get(voltToleranceEepromAdress, memory.settings.voltTolerance);
-    EEPROM.get(currentProtectionEepromAdress, memory.settings.currentProtectionMode);
-    EEPROM.get(batteryModeEepromAdress, memory.settings.batteryMode);
-    EEPROM.get(questVoltEepromAdress, memory.settings.questVolt);
-    EEPROM.get(currentLimitEepromAdress, memory.settings.currentLimit);
-    EEPROM.put(SETTINGS_ADRESS, memory.settings);
+    // ADD LOGO
+    display.textToScreenFull(1, 20, ST7735_WHITE, ST7735_BLACK, 1, F(">Version difference detected"), true);
+    display.textToScreenFast(1, 1, F("\n>Update processing..."), true);
 
     delay(2000);
 
@@ -86,9 +78,9 @@ ErrorCode TunixMemoryManager::firmwareValidate()
     eepromVersion = system_version::FIRMWARE;
     EEPROM.put(VERSION_ADRESS, eepromVersion);
 
-    display.textToScreenFast(1, 1, "\n>Update Complete.", true);
+    display.textToScreenFast(1, 1, F("\n>Update Complete."), true);
     delay(400);
-    display.textToScreenFast(1, 1, "\n>Pls Reset the Device", true);
+    display.textToScreenFast(1, 1, F("\n>Pls Reset the Device"), true);
     
     while (true); // Lock the Device.
   }

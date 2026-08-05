@@ -2,7 +2,7 @@
     Tunix - Tunahan Bayraktar
     Mosfet Power Supply with TL494
     Arduino Nano
-    Version 0.7.0 Alpha - Build.26.08.B
+    Version 0.7.1 Alpha - Build.26.08.C
 
     (128 - text width) / 2 -- Small Text Size: 5+1 -- Med. Txt. Size: 10+2
 
@@ -10,20 +10,18 @@
     CHANGELOG
     ---------------------------------------------------------
     [Added]
-    - Tunix Core Modules V3 has been integrated into the project.
-    - Tunix Input Manager has been integrated into the project.
+    - Variations for textToScreenFull and textToScreenFast functions to support both RAM and FLASH strings.
 
     [Changed]
-    - All functions has been re-structured and re-written to be more efficient and readable.
-    - Complete overhaul towards C++ standards and practices.
-    - Global variables has been removed and replaced with class objects.
-    - File names has been re-structured.
+    - All static strings in the project have been converted to FLASH strings using the F() macro to optimize RAM usage.
+    - Update screen text to indicate "Version difference detected" instead of "Version inconstancy detected" for clarity.
+    - Complete overhaul of Display Driver for expansion to display capabilities.
+    - Pre-view of Power Supply Mode has been implemented.
 
     [Removed]
-    - Unrequired definitions has been removed.
-    - Old #define versioning has been removed and replaced with a struct.
-    - Constants.h has been re-structured and cleaned up with C++ standards.
-    - Old firmware files have been removed and replaced with Tunix Core Modules V3.
+    - Old EEPROM address variables and related code that were deleted.
+    - Unused variables has been removed from classes.
+    - Display Driver has been compeletely cleaned up from other functions.
 
     [Fixed]
     - 
@@ -53,7 +51,7 @@ OutputManager output;
 MenuClass menu;
 TempController temperature;
 
-InputManager inputManager(pins::TOP_BUTTON, pins::BOTTOM_BUTTON, pins::LEFT_BUTTON, pins::RIGHT_BUTTON);
+InputManager inputManager(pins::UP_BUTTON, pins::DOWN_BUTTON, pins::LEFT_BUTTON, pins::RIGHT_BUTTON);
 
 void setup()
 {
@@ -81,10 +79,10 @@ void setup()
   display.initDisplay();
   memory.getBasicMemory();
 
-  display.textToScreenFull(35, 42, ST7735_WHITE, ST7735_BLACK, 2, "TUNIX", false);
-  display.textToScreenFull(6, 67, ST7735_WHITE, ST7735_BLACK, 2, "ELECTRONIC", false);
+  display.textToScreenFull(35, 42, ST7735_WHITE, ST7735_BLACK, 2, F("TUNIX"), false);
+  display.textToScreenFull(6, 67, ST7735_WHITE, ST7735_BLACK, 2, F("ELECTRONIC"), false);
   delay(350);
-  display.textToScreenFull(3, 115, TFT_GRAY, ST7735_BLACK, 1, "Build.26.08.B", false);
+  display.textToScreenFull(3, 115, TFT_GRAY, ST7735_BLACK, 1, F("Build.26.08.B"), false);
   tone(pins::BUZZER, 1800, 50);
   delay(1000);
 }

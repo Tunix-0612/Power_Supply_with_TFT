@@ -4,28 +4,22 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-// --- OLD EEPROM ADDRESSES ---
-#define voltToleranceEepromAdress 0
-#define currentProtectionEepromAdress 5
-#define batteryModeEepromAdress 7
-#define questVoltEepromAdress 10
-#define currentLimitEepromAdress 20
-
 // --- DISPLAY COLORS ---
 #define TFT_GRAY 0x7BEF
 
 // --- PINOUT ---
 namespace pins 
 {
-  constexpr byte RIGHT_BUTTON = 1;
-  constexpr byte TOP_BUTTON = 2;
-  constexpr byte BOTTOM_BUTTON = 3;
+  constexpr byte BUZZER = 1;
+  
+  constexpr byte RIGHT_BUTTON = 0;
+  constexpr byte UP_BUTTON = 2;
+  constexpr byte DOWN_BUTTON = 3;
   constexpr byte LEFT_BUTTON = 4;
   constexpr byte FAN = 5;
   constexpr byte SCREEN_BACKLIGHT = 6;
   constexpr byte VOLTAGE_CONTROL = 9;
   constexpr byte CURRENT_CONTROL = 10;
-  constexpr byte BUZZER = 12;
 
   constexpr byte DTC = A0;
   constexpr byte POT = A1;
@@ -71,7 +65,7 @@ struct VersionInfo
 
 namespace system_version 
 {
-  constexpr VersionInfo FIRMWARE = {0, 7, 0};
+  constexpr VersionInfo FIRMWARE = {0, 7, 1};
   constexpr VersionInfo MIN_SUPPORTED = {0, 7, 0};
 }
 

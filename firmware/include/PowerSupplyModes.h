@@ -6,6 +6,8 @@
 class PowerSupplyClass
 {
   private:
+    void setupAdvancedLayout();
+    void advancedModRenderer(float volt, float current, bool relayActive);
   
   public:
     PowerSupplyClass();
@@ -16,10 +18,7 @@ class PowerSupplyClass
     void questVoltChange();
     void advancedMod();
 
-    unsigned long previousTime = 0;
-    unsigned long secondaryPreviousTime = 0;
-    unsigned long currentTime = 0;
-    const unsigned long refreshTime = 100;
+    const unsigned long refreshTime = 200;
     const unsigned long secondaryRefreshTime = 500;
 };
 
