@@ -5,6 +5,7 @@
 #include "TempController.h"
 #include "PowerSupplyModes.h"
 #include "TunixMemoryManager.h"
+#include "InputManager.h"
 
 MenuClass::MenuClass() 
 { 
@@ -21,283 +22,366 @@ void MenuClass::tunixBadge()
   display.lineToScreen(0, 14, 128, 14, TFT_GRAY);
 }
 
-void MenuClass::menuGridLines()
+void MenuClass::voltageSettingsMenu()
 {
-  display.lineToScreen(12, 34, 116, 34, TFT_GRAY);
-  display.lineToScreen(12, 51, 116, 51, TFT_GRAY);
-  display.lineToScreen(12, 68, 116, 68, TFT_GRAY);
-  display.lineToScreen(12, 85, 116, 85, TFT_GRAY);
-  display.lineToScreen(12, 102, 116, 102, TFT_GRAY);
-}
+  display.clearScreen(ST7735_BLACK);
+  display.drawHeader(F("VOLT PROTECTION"));
 
-void MenuClass::settingsMenuTextData()
-{
-  char currentLimitStr[10];
-  dtostrf(memory.settings.currentLimit, 5, 2, currentLimitStr);
-  if(memory.settings.currentLimit >= 10) display.textToScreenFull(94, 40, ST7735_WHITE, ST7735_BLACK, 1, currentLimitStr, false);
-  else display.textToScreenFull(100, 40, ST7735_WHITE, ST7735_BLACK, 1, currentLimitStr, false);
+  bool drawFull = true;
+  unsigned long lastTempCheck = millis();
 
-  if(memory.settings.currentProtectionMode == true) display.textToScreenFast(112, 57, F("CC"), false);
-  if(memory.settings.currentProtectionMode == false) display.textToScreenFast(112, 57, F("CP"), false);
-
-  if(memory.settings.batteryMode == true) display.textToScreenFast(94, 74, F("Active"), false); 
-  if(memory.settings.batteryMode == false) display.textToScreenFast(92, 74, F("Passive"), false);
-}
-
-void MenuClass::settingsMenuText()
-{
-  display.textToScreenFull(5, 23, ST7735_WHITE, ST7735_BLACK, 1, F("Volt Tolerance"), false);
-  display.textToScreenFast(5, 40, F("Current Limitation"), false);
-  display.textToScreenFast(5, 74, F("Battery Mode"), false);
-  display.textToScreenFast(5, 91, F("Factory Reset"), false);
-  display.textToScreenFast(5, 108, F("Back"), false);
-}
-
-
-
-void MenuClass::mainMenuText()
-{
-  display.textToScreenFull(34, 23, ST7735_WHITE, ST7735_BLACK, 1 , F("Basic Mode"), false);
-  display.textToScreenFast(25, 40, F("Advanced Mode"), false);
-  display.textToScreenFast(40, 57, F("Settings"), false);
-  display.textToScreenFast(31, 74, F("Information"), false);
-}
-
-void MenuClass::menuSelectionCursor()
-{
-  short cursorXPosition;
-  for(short g = 20; g < 106; g = g + 17) display.drawCircleShape(2, g, 123, 13, ST7735_BLACK);
-  if(menuCursor == 1) cursorXPosition = 20;
-  if(menuCursor == 2) cursorXPosition = 37;
-  if(menuCursor == 3) cursorXPosition = 54;
-  if(menuCursor == 4) cursorXPosition = 71;
-  if(menuCursor == 5) cursorXPosition = 88;
-  if(menuCursor == 6) cursorXPosition = 105;
-  display.drawCircleShape(2, cursorXPosition, 123, 13, ST7735_WHITE);
-  return;
-}
-
-void MenuClass::infoMenu()
-{
-  short textPos, textCount = 1;
-  display.clearScreen();
-  display.textToScreenFull(16, 5, TFT_GRAY, ST7735_BLACK, 1, F("Tunix Electronics"), false);
-  display.lineToScreen(2, 14, 126, 14, TFT_GRAY);
-  for (textCount = 17; textPos < 128; textPos = textPos + 10)
+  while(true)
   {
-    switch(textCount)
+    inputManager.update();
+
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+
+    if(drawFull)
     {
-      case 1: display.textToScreenFull(3, textPos, TFT_GRAY, ST7735_BLACK, 1, F("MCU"), false); break;
-      case 2: display.textToScreenFast(3, textPos, F("MHZ"), false); break;
-      case 3: display.textToScreenFast(3, textPos, F("GPU"), false); break;
-      case 4: display.textToScreenFast(3, textPos, F("GFX.API"), false); break;
-      case 5: display.textToScreenFast(3, textPos, F("ROM"), false); break;
-      case 6: display.textToScreenFast(3, textPos, F("RAM"), false); break;
-      case 7: display.textToScreenFast(3, textPos, F("OS"), false); break;
-      case 8: display.textToScreenFast(3, textPos, F("OS VER"), false); break;
-      case 9: display.textToScreenFast(3, textPos, F("BUILD"), false); break;
-      case 10: display.textToScreenFast(3, textPos, F("VOLT LIM"), false); break;
-      case 11: display.textToScreenFast(3, textPos, F("SCREEN"), false); break;
+      display.textToScreenFull(10, 30, ST7735_WHITE, ST7735_BLACK, 1, F("Volt Tolerance:"), false);
+      drawFull = false;
     }
-    textCount++;
-  }
-  textCount = 1;
-  for (textPos = 17; textPos < 128; textPos = textPos + 10) 
-  {
-    switch(textCount)
+
+    char voltStr[10];
+    dtostrf(characteristics::MAX_VOLTAGE, 5, 2, voltStr);
+    display.textToScreenFull(20, 50, ST7735_YELLOW, ST7735_BLACK, 2, voltStr, false);
+    display.textToScreenFull(85, 50, ST7735_YELLOW, ST7735_BLACK, 2, F("V"), false);
+
+    if(eventUp == BTN_EVENT_CLICK)
     {
-      case 1: display.textToScreenFull(60, textPos, ST7735_WHITE, ST7735_BLACK, 1, F("Atmega328P"), false); break;
-      case 2: display.textToScreenFast(3, textPos, F("16MHZ"), false); break;
-      case 3: display.textToScreenFast(3, textPos, F("ST7735"), false); break;
-      case 4: display.textToScreenFast(3, textPos, F("ADAFRUIT"), false); break;
-      case 5: display.textToScreenFast(3, textPos, F("NaN/30720"), false); break;
-      case 6: display.textToScreenFast(3, textPos, F("NaN/2048"), false); break;
-      case 7: display.textToScreenFast(3, textPos, F("Tunix PS.UI"), false); break;
-      case 8: display.textToScreenFast(3, textPos, F("V0.6.0"), false); break;
-      case 9: display.textToScreenFast(3, textPos, F("26.08.A"), false); break;
-      case 10: display.textToScreenFast(3, textPos, F("0-24V"), false); break;
-      case 11: display.textToScreenFast(3, textPos, F("128x128 SPI"), false); break;
+      tone(pins::BUZZER, 1500, 20);
+      if(memory.settings.voltTolerance <= 0.95)
+      memory.settings.voltTolerance += 0.05;
     }
-    textCount++;
+
+    if(eventDown == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      if(memory.settings.voltTolerance >= 0.10)
+      memory.settings.voltTolerance -= 0.05;
+    }
+
+    if(eventLeft == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1200, 30);
+      memory.saveBasicMemory();
+      break;
+    }
+
+    if(millis() - lastTempCheck >= 1000)
+    {
+      lastTempCheck = millis();
+      temperature.tempControl();
+    }
   }
-  textCount = 1;
-  while(digitalRead(pins::LEFT_BUTTON) == HIGH)
+}
+
+void MenuClass::currentSettingsMenu()
+{
+  display.clearScreen(ST7735_BLACK);
+  display.drawHeader(F("CURR PROTECTION"));
+
+  unsigned long lastTempCheck = millis();
+
+  while(true)
   {
-    delay(2);
-    sleepTime++;
-    if(sleepTime >= 30000) powerSupply.standbyMode();
+    inputManager.update();
+
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+
+    display.textToScreenFull(10, 30, ST7735_WHITE, ST7735_BLACK, 1, F("Mode:"), false);
+
+    if (memory.settings.currentProtectionMode == 1) display.textToScreenFull(50, 30, ST7735_GREEN, ST7735_BLACK, 1, F("CC (Limiter) "), false);
+    else                                            display.textToScreenFull(50, 30, ST7735_RED, ST7735_BLACK, 1, F("OCP (Cut-Off)"), false);
+
+    display.textToScreenFull(10, 60, ST7735_WHITE, ST7735_BLACK, 1, F("Current Limit:"), false);
+    
+    char currStr[10];
+    dtostrf(memory.settings.currentLimit, 5, 2, currStr);
+    display.textToScreenFull(20, 80, ST7735_YELLOW, ST7735_BLACK, 2, currStr, false);
+    display.textToScreenFull(85, 80, ST7735_YELLOW, ST7735_BLACK, 2, F("A"), false);
+
+    if(eventUp == BTN_EVENT_CLICK || eventDown == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      memory.settings.currentProtectionMode = !memory.settings.currentProtectionMode;
+    }
+
+    if(eventLeft == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1200, 30);
+      memory.saveBasicMemory();
+      break;
+    }
+
+    if(millis() - lastTempCheck >= 1000)
+    {
+      lastTempCheck = millis();
+      temperature.tempControl();
+    }
   }
-  while(digitalRead(pins::UP_BUTTON) == LOW);
-  tone(pins::BUZZER, 1800, 50);
-  return;
+}
+
+void MenuClass::backlightSettingsMenu()
+{
+  display.clearScreen(ST7735_BLACK);
+  display.drawHeader(F("BACKLIGHT"));
+
+  unsigned long lastTempCheck = millis();
+
+  while(true)
+  {
+    inputManager.update();
+
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+
+    display.textToScreenFull(10, 35, ST7735_WHITE, ST7735_BLACK, 1, F("Brightness:"), false);
+
+    char levelStr[8];
+    snprintf(levelStr, sizeof(levelStr), "%%%d  ", memory.settings.backlightLevel);
+    display.textToScreenFull(35, 60, ST7735_CYAN, ST7735_BLACK, 2, levelStr, false);
+
+    uint8_t barWidth = map(memory.settings.backlightLevel, 0, 100, 0, 108);
+    display.getRawDisplay().drawRect(10, 90, 108, 12, ST7735_WHITE);
+    display.getRawDisplay().fillRect(11, 91, barWidth, 10, ST7735_GREEN);
+    display.getRawDisplay().fillRect(11 + barWidth, 91, 106 - barWidth, 10, ST7735_BLACK);
+
+    if(eventUp == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      if(memory.settings.backlightLevel <= 90) 
+      {
+        memory.settings.backlightLevel += 10;
+        analogWrite(pins::SCREEN_BACKLIGHT, map(memory.settings.backlightLevel, 0, 100, 0, 255));
+      }
+    }
+
+    if(eventDown == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      if(memory.settings.backlightLevel >= 10) 
+      {
+        memory.settings.backlightLevel -= 10;
+        analogWrite(pins::SCREEN_BACKLIGHT, map(memory.settings.backlightLevel, 0, 100, 0, 255));
+      }
+    }
+
+    if(eventLeft == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1200, 30);
+      memory.saveBasicMemory();
+      break;
+    }
+
+    if(millis() - lastTempCheck >= 1000)
+    {
+      lastTempCheck = millis();
+      temperature.tempControl();
+    }
+  }
 }
 
 void MenuClass::settingsMenu()
 {
   display.clearScreen();
-  menuCursor = 1;
-  tunixBadge();
-  menuGridLines();
-  settingsMenuText();
-  settingsMenuTextData();
-  menuSelectionCursor();
+  uint8_t settingsCursor = 1;
+  uint8_t lastCursor = 0;
+  bool drawFull = true;
+
+  unsigned long lastDeviceCheck = millis();
+
   while(true)
   {
-    if(digitalRead(pins::UP_BUTTON) == LOW)
+    inputManager.update();
+
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+    ButtonEvent eventRight = inputManager.getEvent(BTN_RIGHT);
+
+    if(drawFull)
     {
-      tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::UP_BUTTON) == LOW);
-      menuCursor--;
-      menuCursor = constrain(menuCursor, 1, 6);
-      sleepTime = 0;
-      menuSelectionCursor();
-    }
-    if(digitalRead(pins::DOWN_BUTTON) == LOW)
-    {
-      tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::DOWN_BUTTON) == LOW);
-      menuCursor++;
-      menuCursor = constrain(menuCursor, 1, 6);
-      sleepTime = 0;
-      menuSelectionCursor();
-    }
-    if(digitalRead(pins::RIGHT_BUTTON) == LOW)
-    {
-      tone(pins::BUZZER, 1800, 60);
-      menuSelectionCursor();
-      while(digitalRead(pins::RIGHT_BUTTON) == LOW);
+      display.clearScreen(ST7735_BLACK);
+      display.drawHeader(F("SETTINGS"));
+
+      display.textToScreenFull(20, 30, ST7735_WHITE, ST7735_BLACK, 1, F("Volt Protection"), false);
+      display.textToScreenFull(20, 50, ST7735_WHITE, ST7735_BLACK, 1, F("Curr Protection"), false);
+      display.textToScreenFull(20, 70, ST7735_WHITE, ST7735_BLACK, 1, F("Backlight"), false);
+
+      uint8_t initY = 30 + ((settingsCursor - 1) * 20);
+      display.drawCircleShape(8, initY + 3, 3, ST7735_WHITE, true);
       
-      if(menuCursor == 2)
-      {
-        short buttonHoldTime, flexibleDelay;
-        while (digitalRead(pins::LEFT_BUTTON) == HIGH)
-        {
-          buttonHoldTime = 0;
-          flexibleDelay = 200;
-          returnTime++;
-          delay(2);
-          if(returnTime >= 7500) break;
-          while (digitalRead(pins::UP_BUTTON) == LOW)
-          {
-            tone(pins::BUZZER, 1200, 20);
-            buttonHoldTime++;
-            memory.settings.currentLimit =+ 0.1;
-            memory.settings.currentLimit = constrain(memory.settings.currentLimit, 0.1, 20.0);
-            if(buttonHoldTime > 10) flexibleDelay = 100;
-            if(buttonHoldTime > 25) flexibleDelay = 75;
-            returnTime = 0;
-            settingsMenuTextData();
-            delay(flexibleDelay);
-          }
-          while (digitalRead(pins::DOWN_BUTTON) == LOW)
-          {
-            tone(pins::BUZZER, 1200, 20);
-            buttonHoldTime++;
-            memory.settings.currentLimit =- 0.1;
-            memory.settings.currentLimit = constrain(memory.settings.currentLimit, 0.1, 20.0);
-            if(buttonHoldTime > 10) flexibleDelay = 100;
-            if(buttonHoldTime > 25) flexibleDelay = 75;
-            returnTime = 0;
-            settingsMenuTextData();
-            delay(flexibleDelay);
-          }
-        }
-        tone(pins::BUZZER, 1800, 60);
-        returnTime = 0;
-        while(digitalRead(pins::LEFT_BUTTON) == LOW);
-      }
-      if(menuCursor == 3)
-      {
-        while(digitalRead(pins::RIGHT_BUTTON) == LOW);
-        memory.settings.currentProtectionMode = !memory.settings.currentProtectionMode;
-        settingsMenuTextData();
-      }
-      if(menuCursor == 4)
-      {
-        while(digitalRead(pins::RIGHT_BUTTON) == LOW);
-        memory.settings.batteryMode = !memory.settings.batteryMode;
-        settingsMenuTextData();
-      }
-      if(menuCursor == 5)
-      {
-        while(digitalRead(pins::RIGHT_BUTTON) == LOW);
-        memory.factoryReset();
-      }
-      if(menuCursor == 6)
-      {
-        while(digitalRead(pins::RIGHT_BUTTON) == LOW);
-        menuCursor = 1;
-        return;
-      }
+      lastCursor = settingsCursor;
+      drawFull = false;
     }
-    sleepTime++;
-    if(sleepTime >= 30000) sleepTime = powerSupply.standbyMode();
-    delay(2);
+
+    if(settingsCursor != lastCursor)
+    {
+      if(lastCursor > 0) 
+      {
+        uint8_t oldY = 30 + ((lastCursor - 1) * 20);
+        display.drawCircleShape(8, oldY + 3, 3, ST7735_BLACK, true);
+      }
+
+      uint8_t newY = 30 + ((settingsCursor - 1) * 20);
+      display.drawCircleShape(8, newY + 3, 3, ST7735_WHITE, true);
+      
+      lastCursor = settingsCursor;
+    }
+
+    if(eventUp == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      if(settingsCursor > 1) settingsCursor--;
+    }
+
+    if(eventDown == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1500, 20);
+      if(settingsCursor < 3) settingsCursor++;
+    }
+
+    if(eventRight == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1800, 50);
+      
+      switch(settingsCursor)
+      {
+        case 1: 
+          voltageSettingsMenu();
+          break;
+        case 2: 
+          currentSettingsMenu();
+          break;
+        case 3: 
+          backlightSettingsMenu();
+          break;
+      }
+      drawFull = true; 
+    }
+
+    if(eventLeft == BTN_EVENT_CLICK)
+    {
+      tone(pins::BUZZER, 1200, 30);
+      break;
+    }
+
+    if(millis() - lastDeviceCheck >= 1000)
+    {
+      lastDeviceCheck = millis();
+      temperature.tempControl();
+    }
   }
-  sleepTime = 0;
-  return;
 }
 
+void MenuClass::menuSelectionCursor(uint8_t currentCursor, uint8_t previousCursor)
+{
+  if (previousCursor >= 1 && previousCursor <= 4) 
+  {
+    uint8_t oldY = 20 + (previousCursor - 1) * 17;
+    display.drawBox(2, oldY, 123, 13, ST7735_BLACK, false);
+  }
+
+  uint8_t newY = 20 + (currentCursor - 1) * 17;
+  display.drawBox(2, newY, 123, 13, ST7735_WHITE, false);
+}
 
 void MenuClass::mainMenu()
 {
-  while(digitalRead(pins::LEFT_BUTTON) == LOW);
   display.clearScreen();
   menuCursor = 1;
-  bool drawMenu = true;
-  int tempControlTime;
+  uint8_t lastCursor = 0;
+  bool drawFullMenu = true;
+
+  unsigned long lastTempCheck = millis();
+  unsigned long lastActivityTime = millis();
+
   while(true)
   {
-    if(drawMenu == true)
+    inputManager.update();
+
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventDown  = inputManager.getEvent(BTN_DOWN);
+    ButtonEvent eventRight = inputManager.getEvent(BTN_RIGHT);
+
+    if(drawFullMenu)
     {
       display.clearScreen();
       tunixBadge();
-      menuGridLines();
-      mainMenuText();
-      menuSelectionCursor();
-      drawMenu = false;
+      display.getRawDisplay().drawFastHLine(12, 34, 105, TFT_GRAY);
+      display.getRawDisplay().drawFastHLine(12, 51, 105, TFT_GRAY);
+      display.getRawDisplay().drawFastHLine(12, 68, 105, TFT_GRAY);
+      display.getRawDisplay().drawFastHLine(12, 85, 105, TFT_GRAY);
+      display.getRawDisplay().drawFastHLine(12, 102, 105, TFT_GRAY);
+
+      display.textToScreenFull(34, 23, ST7735_WHITE, ST7735_BLACK, 1 , F("Basic Mode"), false);
+      display.textToScreenFast(25, 40, F("Advanced Mode"), false);
+      display.textToScreenFast(40, 57, F("Settings"), false);
+      display.textToScreenFast(31, 74, F("Information"), false);
+      
+      lastCursor = 0;
+      menuSelectionCursor(menuCursor, lastCursor);
+      lastCursor = menuCursor;
+
+      drawFullMenu = false;
+      lastActivityTime = millis();
     }
-    if(digitalRead(pins::UP_BUTTON) == LOW)
+
+    if(eventUp == BTN_EVENT_CLICK)
     {
       tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::UP_BUTTON) == LOW);
-      menuCursor--;
-      menuCursor = constrain(menuCursor, 1, 4);
-      sleepTime = 0;
-      menuSelectionCursor();
+      
+      if(menuCursor > 1) {
+        menuCursor--;
+        menuSelectionCursor(menuCursor, lastCursor);
+        lastCursor = menuCursor;
+      }
+      lastActivityTime = millis();
     }
-    if(digitalRead(pins::DOWN_BUTTON) == LOW)
+
+    if(eventDown == BTN_EVENT_CLICK)
     {
       tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::DOWN_BUTTON) == LOW);
-      menuCursor++;
-      menuCursor = constrain(menuCursor, 1, 4);
-      sleepTime = 0;
-      menuSelectionCursor();
+
+      if(menuCursor < 4) {
+        menuCursor++;
+        menuSelectionCursor(menuCursor, lastCursor);
+        lastCursor = menuCursor;
+      }
+      lastActivityTime = millis();
     }
-    if(digitalRead(pins::RIGHT_BUTTON) == LOW)
+
+    if(eventRight == BTN_EVENT_CLICK)
     {
       tone(pins::BUZZER, 1800, 50);
-      sleepTime = 0;
-      while(digitalRead(pins::RIGHT_BUTTON) == LOW);
+      lastActivityTime = millis();
+
       switch(menuCursor)
       {
         case 1: powerSupply.basicMod(); break;
         case 2: powerSupply.advancedMod(); break;
         case 3: settingsMenu(); break;
-        case 4: infoMenu(); break;
+        case 4: break;
       }
-      drawMenu = true;
+      drawFullMenu = true;
     }
-    delay(2);
-    tempControlTime++;
-    sleepTime++;
-    if(tempControlTime >= 500) 
+
+    if(millis() - lastTempCheck >= 1000) 
     {
+      lastTempCheck = millis();
       temperature.tempControl();
-      tempControlTime = 0;
     }
-    if(sleepTime >= 30000) powerSupply.standbyMode();
+
+    if(millis() - lastActivityTime >= 60000) 
+    {
+      powerSupply.standbyMode();
+      drawFullMenu = true;
+    }
   }
-  return;
 }

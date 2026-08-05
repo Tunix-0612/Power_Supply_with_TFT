@@ -2,7 +2,7 @@
     Tunix - Tunahan Bayraktar
     Mosfet Power Supply with TL494
     Arduino Nano
-    Version 0.7.1 Alpha - Build.26.08.C
+    Version 0.7.2 Alpha - Build.26.08.D
 
     (128 - text width) / 2 -- Small Text Size: 5+1 -- Med. Txt. Size: 10+2
 
@@ -10,21 +10,24 @@
     CHANGELOG
     ---------------------------------------------------------
     [Added]
-    - Variations for textToScreenFull and textToScreenFast functions to support both RAM and FLASH strings.
+    - Minor module updates.
 
     [Changed]
-    - All static strings in the project have been converted to FLASH strings using the F() macro to optimize RAM usage.
-    - Update screen text to indicate "Version difference detected" instead of "Version inconstancy detected" for clarity.
-    - Complete overhaul of Display Driver for expansion to display capabilities.
-    - Pre-view of Power Supply Mode has been implemented.
-
+    - Minor optimization to menu grid line render.
+    - Color codes has been moved to Display Driver.
+    - Complete over-haul to the Settings Menu and Menu UI.
+    
     [Removed]
-    - Old EEPROM address variables and related code that were deleted.
-    - Unused variables has been removed from classes.
-    - Display Driver has been compeletely cleaned up from other functions.
+    - Info Menu has been removed temporarily.
 
     [Fixed]
     - 
+
+    [Notice]
+      New UI features are experimental as they are not expected to work properly yet or work at all.
+      The "Alpha" tag usually means the version is not TESTED at all nor ready-to-use.
+      The "Beta" versions will be tested on board and diagnosed for any problems.
+      For now visual bugs and unintended behavior is expected.
 */
 
 #include "Constants.h"

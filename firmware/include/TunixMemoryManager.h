@@ -18,6 +18,7 @@ class TunixMemoryManager
       bool currentProtectionMode;
       bool batteryMode;
       float questVolt;
+      uint8_t backlightLevel;
     };
 
     // Add additional memory structs here if needed

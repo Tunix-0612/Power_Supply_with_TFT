@@ -9,6 +9,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
+// --- DISPLAY COLORS ---
+#define TFT_GRAY 0x7BEF
+
 enum UISlot {
     SLOT_VOLTAGE,
     SLOT_CURRENT,
@@ -64,6 +67,12 @@ class DisplayDriver
     // Slot renderer for float.
     // ------------------------------------------------------------------------
     void drawSlotFloat(UISlot slot, float val, uint8_t width, uint8_t prec, const char* unit, uint16_t textColor, uint16_t bgColor = ST7735_BLACK);
+
+    // ------------------------------------------------------------------------
+    // Header renderer.
+    // ------------------------------------------------------------------------
+    void drawHeader(const char* title, uint16_t textColor = ST7735_WHITE, uint16_t lineColor = TFT_GRAY);
+    void drawHeader(const __FlashStringHelper* title, uint16_t textColor = ST7735_WHITE, uint16_t lineColor = TFT_GRAY);
 
     // ------------------------------------------------------------------------
     // Other renderers.

@@ -24,13 +24,9 @@ void DisplayDriver::initDisplay()
   digitalWrite(pins::SCREEN_BACKLIGHT, HIGH);
 }
 
-//-----------------------------------
-//  PRIMITIVE FUNCTIONS
-//-----------------------------------
-
-// ----------------------------------
+// ============================================================================
 // Flash variation for text rendering
-// ----------------------------------
+// ============================================================================
 void DisplayDriver::textToScreenFull(int x, int y, uint16_t textColor, uint16_t backgroundColor, int size, const __FlashStringHelper *text, bool textWrap)
 {
   tft.setCursor(x, y);
@@ -46,9 +42,9 @@ void DisplayDriver::textToScreenFast(int x, int y, const __FlashStringHelper *te
   tft.print(text);
 }
 
-// ---------------------------------
+// ============================================================================
 // RAM variation for text rendering
-// ---------------------------------
+// ============================================================================
 void DisplayDriver::textToScreenFull(int x, int y, uint16_t textColor, uint16_t backgroundColor, int size, const char *text, bool textWrap)
 {
   tft.setCursor(x, y);
@@ -118,6 +114,33 @@ void DisplayDriver::drawSlotFloat(UISlot slot, float val, uint8_t width, uint8_t
     snprintf(buf, sizeof(buf), "%s%s", floatBuf, unit);
 
     drawSlotText(slot, buf, textColor, bgColor);
+}
+
+// ----------------------------------------------------------------------------
+// RAM Header renderer
+// ----------------------------------------------------------------------------
+void DisplayDriver::drawHeader(const char* title, uint16_t textColor, uint16_t lineColor) 
+{
+    uint8_t len = strlen(title);
+    int16_t xPos = (128 - (len * 6)) / 2;
+    if (xPos < 0) xPos = 0;
+
+    textToScreenFull(xPos, 4, textColor, ST7735_BLACK, 1, title, false);
+
+    tft.drawFastHLine(0, 16, 128, lineColor);
+}
+
+// ----------------------------------------------------------------------------
+// FLASH Header renderer
+// ----------------------------------------------------------------------------
+void DisplayDriver::drawHeader(const __FlashStringHelper* title, uint16_t textColor, uint16_t lineColor) 
+{
+    char tempBuf[20];
+    PGM_P p = reinterpret_cast<PGM_P>(title);
+    strncpy_P(tempBuf, p, sizeof(tempBuf) - 1);
+    tempBuf[sizeof(tempBuf) - 1] = '\0';
+
+    drawHeader(tempBuf, textColor, lineColor);
 }
 
 void DisplayDriver::lineToScreen(int startX, int startY, int endX, int endY, uint16_t color) { tft.drawLine(startX, startY, endX, endY, color); }

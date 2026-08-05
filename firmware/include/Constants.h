@@ -4,9 +4,6 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-// --- DISPLAY COLORS ---
-#define TFT_GRAY 0x7BEF
-
 // --- PINOUT ---
 namespace pins 
 {

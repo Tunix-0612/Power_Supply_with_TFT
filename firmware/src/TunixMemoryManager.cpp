@@ -74,9 +74,16 @@ ErrorCode TunixMemoryManager::firmwareValidate()
 
     delay(2000);
 
+    if(eepromVersion == VersionInfo {0, 7, 1})
+    {
+      settings.backlightLevel = 255;
+    }
+
     // Save the new firmware version to EEPROM
     eepromVersion = system_version::FIRMWARE;
     EEPROM.put(VERSION_ADRESS, eepromVersion);
+
+    EEPROM.put(SETTINGS_ADRESS, settings);
 
     display.textToScreenFast(1, 1, F("\n>Update Complete."), true);
     delay(400);

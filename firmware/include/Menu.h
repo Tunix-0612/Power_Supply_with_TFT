@@ -6,27 +6,20 @@
 class MenuClass
 {
   private:
-    void tunixBadge();
-    void menuGridLines();
-    void settingsMenuTextData();
-    void settingsMenuText();
-    void mainMenuText();
+    uint8_t menuCursor;
 
-    byte menuCursor, sleepTime;
-    int returnTime;
+    void tunixBadge();
+
+    void voltageSettingsMenu();
+    void currentSettingsMenu();
+    void backlightSettingsMenu();
 
   public:
     MenuClass();
 
-    void menuSelectionCursor();
-    void infoMenu();
+    void menuSelectionCursor(uint8_t currentCursor, uint8_t previousCursor);
     void settingsMenu();
     void mainMenu();
-
-    unsigned long currentTime, previousTime, secondaryPreviousTime;
-
-    int timeOut, refreshTime = 250, secondaryRefreshTime = 2500;
-    int potValue, barValue;
 };
 
 extern MenuClass menu;
