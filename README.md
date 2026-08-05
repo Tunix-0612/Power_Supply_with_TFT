@@ -1,4 +1,4 @@
-# Power Supply TFT Firmware (Tunix Core V3)
+# Power Supply TFT Firmware
 
 [![PlatformIO](https://img.shields.io/badge/PlatformIO-Build-orange?style=flat-square&logo=platformio)](https://platformio.org/)
 [![Framework](https://img.shields.io/badge/Framework-Arduino-blue?style=flat-square&logo=arduino)](https://www.arduino.cc/)
