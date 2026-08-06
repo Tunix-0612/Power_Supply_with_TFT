@@ -2,7 +2,7 @@
     Tunix - Tunahan Bayraktar
     Mosfet Power Supply with TL494
     Arduino Nano
-    Version 0.7.3 Alpha - Build.26.08.E
+    Version 0.7.4 Alpha - Build.26.08.F
 
     (128 - text width) / 2 -- Small Text Size: 5+1 -- Med. Txt. Size: 10+2
 

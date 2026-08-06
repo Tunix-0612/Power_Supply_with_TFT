@@ -3,42 +3,54 @@
 #include "DisplayDriver.h"
 #include "TunixErrorManager.h"
 
-OutputManager::OutputManager() { }
+OutputManager::OutputManager() 
+{ 
+  calculateMultipliers();
+}
+
+void OutputManager::calculateMultipliers()
+{
+  voltageMultiplier =     (5.0f / 1023.0f) * ((resistorUp + resistorDown) / resistorDown);
+  mainVoltageMultiplier = (5.0f / 1023.0f) * ((resistorMainUp + resistorMainDown) / resistorMainDown);
+
+  currentMultiplier = (5.0f / 1023.0f) / (gain * shuntResistor);
+
+  pwmMultiplier = 255.0f / characteristics::MAX_VOLTAGE;
+}
+
+void OutputManager::updateResistors(float rUp, float rDown, float rMainUp, float rMainDown, float shunt, float g)
+{
+  resistorUp = rUp;
+  resistorDown = rDown;
+  resistorMainUp = rMainUp;
+  resistorMainDown = rMainDown;
+  shuntResistor = shunt;
+  gain = g;
+  
+  calculateMultipliers();
+}
 
 float OutputManager::readVoltage()
 {
   long sum = 0;
-
-  for(int i = 0; i < characteristics::VOLTAGE_SAMPLE_COUNT; i++) 
-  {
-    sum += analogRead(pins::VOLT_METER);
-    delay(1);
-  }
-
+  for(int i = 0; i < characteristics::VOLTAGE_SAMPLE_COUNT; i++) sum += analogRead(pins::VOLT_METER);
+  
   float average = sum / (float)characteristics::VOLTAGE_SAMPLE_COUNT;
-  float pinVolt = (average / 1023.0) * 5.0;
-  float volt = pinVolt * ((resistorUp + resistorDown) / resistorDown);
 
-  return volt;
+  return average * voltageMultiplier;
 }
 
 float OutputManager::readMainVoltage()
 {
   long sum = 0;
-
-  for(int i = 0; i < characteristics::VOLTAGE_SAMPLE_COUNT; i++) 
-  {
-    sum += analogRead(pins::VOLT_METER_MAIN);
-    delay(1);
-  }
-
-  float average = sum / (float)characteristics::VOLTAGE_SAMPLE_COUNT;
-  float pinVolt = (average / 1023.0) * 5.0;
-  float volt = pinVolt * ((resistorMainUp + resistorMainDown) / resistorMainDown);
+  for(int i = 0; i < characteristics::VOLTAGE_SAMPLE_COUNT; i++) sum += analogRead(pins::VOLT_METER_MAIN);
   
-  if(volt <= 11 && volt >= 8 && volt == false) errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_LOW);
-  if(volt < 8) errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_CRITICAL);
-  if(volt > 27) errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_HIGH);
+  float average = sum / (float)characteristics::VOLTAGE_SAMPLE_COUNT;
+  float volt = average * mainVoltageMultiplier;
+
+  if(volt <= 11.0f && volt >= 8.0f) errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_LOW);
+  if(volt < 8.0f)                   errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_CRITICAL);
+  if(volt > 27.0f)                  errorManager.errorHandler(ErrorCode::MAIN_VOLTAGE_HIGH);
   
   return volt;
 }
@@ -46,50 +58,30 @@ float OutputManager::readMainVoltage()
 float OutputManager::readCurrent()
 {
   long sum = 0;
-
-  for(int i = 0; i < characteristics::CURRENT_SAMPLE_COUNT; i++) 
-  {
-    sum += analogRead(pins::CURRENT_METER);
-    delay(1);
-  }
-
+  for(int i = 0; i < characteristics::CURRENT_SAMPLE_COUNT; i++) sum += analogRead(pins::CURRENT_METER);
+  
   float average = sum / (float)characteristics::CURRENT_SAMPLE_COUNT;
-  float pinVolt = (average / 1023.0) * 5.0;
-  float resistorVolt = pinVolt / gain;
-  float current = resistorVolt / shuntResistor;
-
-  return current;
+  return average * currentMultiplier;
 }
 
-void OutputManager::relayChange()
+void OutputManager::toggleRelay()
 {
-  tone(pins::BUZZER, 1800, 50);
-  while (digitalRead(pins::UP_BUTTON) == LOW);
-  delay(100);
-  relayPosition = !relayPosition;
-  digitalWrite(pins::RELAY, relayPosition);
-  firstScreenWrite = 1;
-  display.drawBox(85, 29, 40, 14, ST7735_BLACK);
-  if(relayPosition == true)   display.textToScreenFull(95, 29, ST7735_WHITE, ST7735_BLACK, 2, F("On"), false);
-  if(relayPosition == false)  display.textToScreenFull(89, 29, ST7735_WHITE, ST7735_BLACK, 2, F("Off"), false);
-
-  return;
+  outputActive = !outputActive;
+  digitalWrite(pins::RELAY, outputActive);
 }
 
-void OutputManager::relayOff()
+void OutputManager::setRelay(bool state)
 {
-  relayPosition = 0;
-  digitalWrite(pins::RELAY, relayPosition);
-  firstScreenWrite = 1;
-  tone(pins::BUZZER, 800, 300);
-  display.drawBox(85, 29, 40, 14, ST7735_BLACK);
-  display.textToScreenFull(89, 29, ST7735_RED, ST7735_BLACK, 2, F("Off"), false);
-  return;
+  outputActive = state;
+  digitalWrite(pins::RELAY, outputActive);
 }
 
 void OutputManager::setVoltage(float targetVoltage)
 {
-  float percentage = targetVoltage / characteristics::MAX_VOLTAGE;
-  pwmValue = percentage * 255;
+  int pwmValue = targetVoltage * pwmMultiplier;
+
+  if (pwmValue > 255) pwmValue = 255;
+  if (pwmValue < 0)   pwmValue = 0;
+  
   analogWrite(pins::VOLTAGE_CONTROL, pwmValue);
 }
