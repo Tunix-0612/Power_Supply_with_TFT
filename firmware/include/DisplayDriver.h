@@ -82,6 +82,11 @@ class DisplayDriver
     void drawCircleShape(int x, int y, int r, uint16_t color, bool filled = false);
     void drawTriangleShape(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color, bool filled = false);
     void clearScreen(uint16_t color = ST7735_BLACK);
+
+    // ------------------------------------------------------------------------
+    // Other display commands.
+    // ------------------------------------------------------------------------
+    void toggleDisplay(bool state);
 };
 
 extern DisplayDriver display;

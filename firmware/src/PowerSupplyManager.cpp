@@ -1,4 +1,4 @@
-#include "PowerSupplyModes.h"
+#include "PowerSupplyManager.h"
 
 #include "Constants.h"
 #include "DisplayDriver.h"
@@ -13,23 +13,37 @@ PowerSupplyClass::PowerSupplyClass() { }
 
 int PowerSupplyClass::standbyMode()
 {
-  digitalWrite(pins::POWER_CONTROL, LOW);
-  digitalWrite(pins::VOLTAGE_CONTROL, LOW);
-  for (int counter = 255; counter != 0; counter--) 
+  output.togglePowerBoard(false);
+  output.setRelay(false);
+  output.setVoltage(0);
+
+  display.toggleDisplay(false);
+
+  unsigned long lastDeviceCheck = millis();
+
+  while(true)
   {
-    analogWrite(pins::SCREEN_BACKLIGHT, counter);
-    delay(5);
+    inputManager.update();
+
+    if(inputManager.getEvent(BTN_UP) == BTN_EVENT_CLICK) break;
+
+    if(millis() - lastDeviceCheck >= 1000)
+    {
+      lastDeviceCheck = millis();
+      temperature.tempControl();
+    }
   }
-  display.clearScreen();
-  while(digitalRead(pins::UP_BUTTON) == HIGH)
-  {
-    delay(2000);
-    temperature.tempControl();
-  }
-  digitalWrite(pins::SCREEN_BACKLIGHT, HIGH);
-  digitalWrite(pins::POWER_CONTROL, HIGH);
-  digitalWrite(pins::VOLTAGE_CONTROL, HIGH);
+
+  display.toggleDisplay(true);
+
+  output.readVoltage();
+  output.readCurrent();
+  output.readMainVoltage();
+  
+  output.togglePowerBoard(true);
+  
   tone(pins::BUZZER, 1800 , 50);
+
   return 0;
 }
 
@@ -71,73 +85,104 @@ void PowerSupplyClass::basicMod()
   return;*/
 }
 
-void PowerSupplyClass::questVoltChangeScreenLines(char *questVoltStr)
+void PowerSupplyClass::renderSetVoltageMenu(uint8_t cursor)
 {
-  display.textToScreenFull(31, 60, ST7735_WHITE, ST7735_BLACK, 2, questVoltStr, false);
-  display.textToScreenFast(1, 1, F("V"), true);
-  if(questVoltChangeCursor == 1)
-  {
-    if(memory.settings.questVolt >= 10)  display.lineToScreen(43, 75, 52, 75, TFT_GRAY);
-    else                          display.lineToScreen(31, 75, 40, 75, TFT_GRAY);
-  }
-  if(questVoltChangeCursor == 2)
-  {
-    if(memory.settings.questVolt >= 10)  display.lineToScreen(67, 75, 76, 75, TFT_GRAY);
-    else                          display.lineToScreen(55, 75, 64, 75, TFT_GRAY);
-  }
-  if(questVoltChangeCursor == 3)
-  {
-    if(memory.settings.questVolt >= 10)  display.lineToScreen(79, 75, 88, 75, TFT_GRAY);
-    else                          display.lineToScreen(67, 75, 76, 75, TFT_GRAY);
-  }
+    display.drawBox(31, 75, 60, 2, ST7735_BLACK, true);
+
+    char voltStr[10];
+    dtostrf(memory.settings.questVolt, 5, 2, voltStr);
+
+    display.textToScreenFull(31, 60, ST7735_WHITE, ST7735_BLACK, 2, voltStr, false);
+    display.textToScreenFull(95, 60, ST7735_YELLOW, ST7735_BLACK, 2, F("V"), false);
+    
+    if (cursor == 1) display.getRawDisplay().drawFastHLine(31, 75, 24, TFT_GRAY);
+    if (cursor == 2) display.getRawDisplay().drawFastHLine(67, 75, 10, TFT_GRAY);
+    if (cursor == 3) display.getRawDisplay().drawFastHLine(79, 75, 10, TFT_GRAY);
 }
 
-void PowerSupplyClass::questVoltChange()
+void PowerSupplyClass::setVoltageMenu()
 {
-  display.clearScreen();
-  display.textToScreenFull(20, 5, ST7735_WHITE, ST7735_BLACK, 2, F("Quest V"), false);
-  display.lineToScreen(0, 25, 128, 25, TFT_GRAY);
-  questVoltChangeCursor = 1;
-  delay(100);
-  char questVoltStr[10];
-  dtostrf(memory.settings.questVolt, 5, 3, questVoltStr);
-  questVoltChangeScreenLines(questVoltStr);
-  while(questVoltChangeCursor <= 3)
+  display.clearScreen(ST7735_BLACK);
+  display.drawHeader(F("SET VOLTAGE"));
+
+  uint8_t setVoltageCursor = 1;
+  float lastDrawnVolt = -1.0f;
+  uint8_t lastDrawnCursor = 0;
+
+  unsigned long buttonPressTimer = 0;
+  bool isRepeating = false;
+  unsigned long lastTempCheck = millis();
+
+  while (setVoltageCursor <= 3)
   {
-    if(digitalRead(pins::UP_BUTTON) == LOW) 
+    inputManager.update();
+    
+    ButtonEvent eventUp    = inputManager.getEvent(BTN_UP);
+    ButtonEvent eventLeft  = inputManager.getEvent(BTN_LEFT);
+    ButtonEvent eventRight = inputManager.getEvent(BTN_RIGHT);
+
+    if (eventUp == BTN_EVENT_CLICK) 
     {
       tone(pins::BUZZER, 1500, 20);
-      while(digitalRead(pins::UP_BUTTON) == LOW);
-      questVoltChangeCursor++;
-      questVoltChangeScreenLines(questVoltStr);
+      setVoltageCursor++;
     }
-    while(digitalRead(pins::LEFT_BUTTON) == LOW)
+
+    bool dec = (eventLeft == BTN_EVENT_CLICK);
+    bool inc = (eventRight == BTN_EVENT_CLICK);
+
+    if (digitalRead(pins::LEFT_BUTTON) == LOW) 
     {
-      tone(pins::BUZZER, 1500, 20);
-      if(questVoltChangeCursor == 1) memory.settings.questVolt -= 1;
-      if(questVoltChangeCursor == 2) memory.settings.questVolt -= 0.1;
-      if(questVoltChangeCursor == 3) memory.settings.questVolt -= 0.01;
-      memory.settings.questVolt = constrain(memory.settings.questVolt, 0, characteristics::MAX_VOLTAGE);
-      dtostrf(memory.settings.questVolt, 5, 3, questVoltStr);
-      questVoltChangeScreenLines(questVoltStr);
-      delay(250);
+        if (millis() - buttonPressTimer > (isRepeating ? 100 : 500)) 
+        {
+            dec = true;
+            buttonPressTimer = millis();
+            isRepeating = true;
+        }
+    } 
+    else if (digitalRead(pins::RIGHT_BUTTON) == LOW) 
+    {
+        if (millis() - buttonPressTimer > (isRepeating ? 100 : 500)) 
+        {
+            inc = true;
+            buttonPressTimer = millis();
+            isRepeating = true;
+        }
+    } 
+    else 
+    {
+        isRepeating = false;
+        if (!inc && !dec) buttonPressTimer = millis();
     }
-    while(digitalRead(pins::RIGHT_BUTTON) == LOW)
+
+    if (dec || inc) 
     {
-      tone(pins::BUZZER, 1500, 20);
-      if(questVoltChangeCursor == 1) memory.settings.questVolt += 1;
-      if(questVoltChangeCursor == 2) memory.settings.questVolt += 0.1;
-      if(questVoltChangeCursor == 3) memory.settings.questVolt += 0.01;
-      memory.settings.questVolt = constrain(memory.settings.questVolt, 0, characteristics::MAX_VOLTAGE);
-      dtostrf(memory.settings.questVolt, 5, 3, questVoltStr);
-      questVoltChangeScreenLines(questVoltStr);
-      delay(250);
+        tone(pins::BUZZER, 1500, 10);
+        float multiplier = (dec) ? -1.0f : 1.0f;
+
+        if (setVoltageCursor == 1) memory.settings.questVolt += (1.00f * multiplier);
+        if (setVoltageCursor == 2) memory.settings.questVolt += (0.10f * multiplier);
+        if (setVoltageCursor == 3) memory.settings.questVolt += (0.01f * multiplier);
+
+        memory.settings.questVolt = constrain(memory.settings.questVolt, 0.0f, characteristics::MAX_VOLTAGE);
+
+        memory.settings.questVolt = round(memory.settings.questVolt * 100.0f) / 100.0f;
+    }
+
+    if (memory.settings.questVolt != lastDrawnVolt || setVoltageCursor != lastDrawnCursor)
+    {
+        renderSetVoltageMenu(setVoltageCursor);
+        lastDrawnVolt = memory.settings.questVolt;
+        lastDrawnCursor = setVoltageCursor;
+    }
+
+    if (millis() - lastTempCheck >= 1000)
+    {
+      lastTempCheck = millis();
+      temperature.tempControl();
     }
   }
-  questVoltChangeCursor = 1;
-  EEPROM.put(SETTINGS_ADRESS, memory.settings);
+  memory.saveBasicMemory();
   tone(pins::BUZZER, 1800, 50);
-  return;
 }
 
 void PowerSupplyClass::setupAdvancedLayout() 
@@ -187,7 +232,7 @@ void PowerSupplyClass::advancedModRenderer(float volt, float current, bool relay
 
 void PowerSupplyClass::advancedMod()
 {
-  digitalWrite(pins::RELAY, LOW);
+  output.setRelay(false); 
   bool outputActive = false;
   
   unsigned long previousTime = 0;
@@ -199,7 +244,7 @@ void PowerSupplyClass::advancedMod()
   previousTime = millis();
   secondaryPreviousTime = millis();
 
-  while(digitalRead(pins::LEFT_BUTTON) == HIGH)
+  while(true)
   {
     currentTime = millis();
 
@@ -220,7 +265,7 @@ void PowerSupplyClass::advancedMod()
       digitalWrite(pins::RELAY, LOW);
       outputActive = false;
 
-      questVoltChange();
+      setVoltageMenu();
 
       setupAdvancedLayout();
     }
@@ -254,8 +299,10 @@ void PowerSupplyClass::advancedMod()
       temperature.tempControl();
     }
   }
-  digitalWrite(pins::RELAY, LOW);
-  outputActive = false;
+
+  output.setRelay(false);
+  output.setVoltage(0);
+
   inputManager.update();
   display.clearScreen(ST7735_BLACK);
   tone(pins::BUZZER, 1800, 50);

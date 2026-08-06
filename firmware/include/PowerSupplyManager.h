@@ -1,5 +1,5 @@
-#ifndef POWERSUPPLYMODES_H
-#define POWERSUPPLYMODES_H
+#ifndef POWERSUPPLYMANAGER_H
+#define POWERSUPPLYMANAGER_H
 
 #include <Arduino.h>
 
@@ -12,14 +12,18 @@ class PowerSupplyClass
   public:
     PowerSupplyClass();
 
-    int standbyMode();
-    void basicMod();
-    void questVoltChangeScreenLines(char *questVoltStr);
-    void questVoltChange();
-    void advancedMod();
-
     const unsigned long refreshTime = 200;
     const unsigned long secondaryRefreshTime = 500;
+
+    uint8_t powerState;
+
+    int standbyMode();
+    
+    void basicMod();
+
+    void renderSetVoltageMenu(uint8_t cursor);
+    void setVoltageMenu();
+    void advancedMod();
 };
 
 extern PowerSupplyClass powerSupply;

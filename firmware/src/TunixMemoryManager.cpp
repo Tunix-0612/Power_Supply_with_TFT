@@ -1,4 +1,7 @@
 #include "TunixMemoryManager.h"
+
+#include <EEPROM.h>
+
 #include "Constants.h"
 #include "DisplayDriver.h"
 
@@ -73,11 +76,6 @@ ErrorCode TunixMemoryManager::firmwareValidate()
     display.textToScreenFast(1, 1, F("\n>Update processing..."), true);
 
     delay(2000);
-
-    if(eepromVersion == VersionInfo {0, 7, 1})
-    {
-      settings.backlightLevel = 255;
-    }
 
     // Save the new firmware version to EEPROM
     eepromVersion = system_version::FIRMWARE;

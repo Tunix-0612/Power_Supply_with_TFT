@@ -2,7 +2,6 @@
 #define TUNIXMEMORYMANAGER_H
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "Constants.h"
 
 class TunixMemoryManager

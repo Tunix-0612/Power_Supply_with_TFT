@@ -3,7 +3,7 @@
 #include "DisplayDriver.h"
 #include "Constants.h"
 #include "TempController.h"
-#include "PowerSupplyModes.h"
+#include "PowerSupplyManager.h"
 #include "TunixMemoryManager.h"
 #include "InputManager.h"
 

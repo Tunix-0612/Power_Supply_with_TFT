@@ -35,6 +35,8 @@ class OutputManager
     void setRelay(bool state);
 
     void setVoltage(float targetVoltage);
+
+    void togglePowerBoard(bool state);
 };
 
 extern OutputManager output;

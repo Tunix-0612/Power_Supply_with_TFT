@@ -10,19 +10,25 @@
     CHANGELOG
     ---------------------------------------------------------
     [Added]
-    - Agression based temperature/fan driving methodes has been added.
-    - Now resistor values/multipliers are calculated pre-mature to increase MCU Clock Cycle efficiency. 
+    - Display Driver now supports isolated screen toggling.
+    - Output Manager now supports isolated Power Board toggling.
+    - Now waking up from standby mode triggers another Self Check.
 
     [Changed]
-    - Improved the temperature sensor faulty check.
-    - Overhaul for the Output Manager.
+    - EEPROM Library definition has been moved to .cpp to isolation.
+    - Minor definition order changes.
+    - Name for the PowerSupplyModes has been changed to PowerSupplyManager.
+    - Standby Function has been improved and re-written with new standards.
+    - Standby Function now acts as when called by the Menu Timeout event instead of at the boot.
     
     [Removed]
-    - Self test has been partialy disabled temporarily.
-    - Unused variables for Output Manager has been removed.
+    - Removed unrequired definitions.
+    - Faulty v0.7.1 specific update has been removed.
 
     [Fixed]
-    - 
+    - [!] Device not checking firmware version has been fixed.
+    - [!] Device not using self test functions has been fixed.
+    - Minor self test bug-fix due to new Output Manager capabilities.
 
     [Notice]
       New UI features are experimental as they are not expected to work properly yet or work at all.
@@ -34,7 +40,7 @@
 #include "Constants.h"
 
 #include "DisplayDriver.h"
-#include "PowerSupplyModes.h"
+#include "PowerSupplyManager.h"
 #include "OutputManager.h"
 #include "Menu.h"
 #include "TempController.h"
@@ -46,7 +52,7 @@
 #include "TunixSelfTest.h"
 
 TunixErrorManager errorManager;
-TunixMemoryManager memory(EEPROM.length());
+TunixMemoryManager memory(1024);
 TunixSelfTest deviceTest;
 
 DisplayDriver display;
@@ -83,6 +89,10 @@ void setup()
   display.initDisplay();
   memory.getBasicMemory();
 
+  deviceTest.selfTest();
+
+  memory.firmwareValidate();
+
   display.textToScreenFull(35, 42, ST7735_WHITE, ST7735_BLACK, 2, F("TUNIX"), false);
   display.textToScreenFull(6, 67, ST7735_WHITE, ST7735_BLACK, 2, F("ELECTRONIC"), false);
   delay(350);
@@ -93,7 +103,7 @@ void setup()
 
 void loop()
 {
-  powerSupply.standbyMode();
   menu.mainMenu();
+
   errorManager.errorHandler(ErrorCode::PROGRAM_LOOP_FAILURE);
 }

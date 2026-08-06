@@ -1,6 +1,6 @@
 #include "OutputManager.h"
+
 #include "Constants.h"
-#include "DisplayDriver.h"
 #include "TunixErrorManager.h"
 
 OutputManager::OutputManager() 
@@ -84,4 +84,10 @@ void OutputManager::setVoltage(float targetVoltage)
   if (pwmValue < 0)   pwmValue = 0;
   
   analogWrite(pins::VOLTAGE_CONTROL, pwmValue);
+}
+
+void OutputManager::togglePowerBoard(bool state)
+{
+  digitalWrite(pins::POWER_CONTROL, state);
+  digitalWrite(pins::VOLTAGE_CONTROL, state);
 }

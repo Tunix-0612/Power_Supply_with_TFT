@@ -1,6 +1,7 @@
 #include "DisplayDriver.h"
 
 #include "Constants.h"
+#include "TunixMemoryManager.h"
 
 SlotConfig slots[] =  
 {
@@ -163,4 +164,30 @@ void DisplayDriver::drawTriangleShape(int x1, int y1, int x2, int y2, int x3, in
 {
   if(filled) tft.fillTriangle(x1, y1, x2, y2, x3, y3, color);
   else       tft.drawTriangle(x1, y1, x2, y2, x3, y3, color);
+}
+
+void DisplayDriver::toggleDisplay(bool state)
+{
+  uint8_t targetPWM = map(memory.settings.backlightLevel, 0, 100, 0, 255);
+  uint8_t fadeDelay = 5;
+
+  if (state == true) 
+  {
+    for (int i = 0; i <= targetPWM; i += 5) 
+    {
+      analogWrite(pins::SCREEN_BACKLIGHT, i);
+      delay(fadeDelay);
+    }
+    analogWrite(pins::SCREEN_BACKLIGHT, targetPWM);
+  }
+  else 
+  {
+    for (int i = targetPWM; i >= 0; i -= 5) 
+    {
+      analogWrite(pins::SCREEN_BACKLIGHT, i);
+      delay(fadeDelay);
+    }
+    analogWrite(pins::SCREEN_BACKLIGHT, 0);
+  }
+  display.clearScreen();
 }
