@@ -11,15 +11,18 @@
     ---------------------------------------------------------
     [Added]
     - Agression based temperature/fan driving methodes has been added.
+    - Now resistor values/multipliers are calculated pre-mature to increase MCU Clock Cycle efficiency. 
 
     [Changed]
     - Improved the temperature sensor faulty check.
+    - Overhaul for the Output Manager.
     
     [Removed]
     - Self test has been partialy disabled temporarily.
+    - Unused variables for Output Manager has been removed.
 
     [Fixed]
-    - Multiple definition mistakes has been fixed.
+    - 
 
     [Notice]
       New UI features are experimental as they are not expected to work properly yet or work at all.
