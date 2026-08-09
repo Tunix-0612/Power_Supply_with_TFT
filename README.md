@@ -4,7 +4,7 @@
 [![Framework](https://img.shields.io/badge/Framework-Arduino-blue?style=flat-square&logo=arduino)](https://www.arduino.cc/)
 [![MCU](https://img.shields.io/badge/MCU-ATmega328P-green?style=flat-square)](https://www.microchip.com/)
 
-A modular, highly optimized, and object-oriented C++ firmware for TL494-based programmable lab power supplies. Built on top of Tunix Core Modules V3, this firmware provides real-time voltage/current metering, feedback control, digital safety protections, custom UI rendering on a 128x128 ST7735 TFT display, and non-volatile configuration management.
+A modular, highly optimized, and object-oriented C++ firmware for TL494-based programmable lab power supplies. This firmware provides real-time voltage/current metering, feedback control, digital safety protections, custom UI rendering on a 128x128 ST7735 TFT display, and non-volatile configuration management.
 
 ---
 
